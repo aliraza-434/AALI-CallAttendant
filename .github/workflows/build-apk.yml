@@ -20,6 +20,7 @@ jobs:
             fi
             unzip -oq "$ZIP_FILE"
             if [ -d aali-call-attendant ]; then
+              rm -rf aali-call-attendant/.github
               shopt -s dotglob
               mv aali-call-attendant/* .
               rmdir aali-call-attendant
