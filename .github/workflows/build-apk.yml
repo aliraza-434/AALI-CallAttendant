@@ -1,0 +1,49 @@
+name: Build AALI APK
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Unzip uploaded source if needed
+        run: |
+          if [ ! -f settings.gradle.kts ]; then
+            ZIP_FILE=$(ls | grep -i '\.zip$' | head -1 || true)
+            if [ -z "$ZIP_FILE" ]; then
+              echo "No source zip and no gradle project found in repo root!" && exit 1
+            fi
+            unzip -oq "$ZIP_FILE"
+            if [ -d aali-call-attendant ]; then
+              shopt -s dotglob
+              mv aali-call-attendant/* .
+              rmdir aali-call-attendant
+            fi
+            echo "Project files ready:"
+            ls -la
+          fi
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+
+      - name: Build debug APK
+        run: gradle assembleDebug --no-daemon
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AALI-CallAttendant-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
